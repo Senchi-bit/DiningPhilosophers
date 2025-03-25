@@ -1,13 +1,16 @@
 ﻿namespace DiningPhilosophers;
-
-public class Philosopher(int id, Mutex leftFork, Mutex rightFork)
+class Philosopher(int id, Mutex leftFork, Mutex rightFork)
 {
     public void Run()
     {
         while (true)
         {
             Think();
-            Eat();
+            while (!TryEat()) 
+            {
+                Console.WriteLine($"Философ {id} не смог поесть и пытается снова");
+                Thread.Sleep(500);
+            }
         }
     }
 
@@ -17,38 +20,41 @@ public class Philosopher(int id, Mutex leftFork, Mutex rightFork)
         Thread.Sleep(new Random().Next(1000, 2000));
     }
 
-    private void Eat()
+    private bool TryEat()
     {
         Console.WriteLine($"Философ {id} пытается начать кушать");
-        //ему нужны обе сразу
-        bool hasLeftFork = false;
-        bool hasRightFork = false;
+
+        Mutex firstFork = leftFork;
+        Mutex secondFork = rightFork;
+        
+        bool hasFirstFork = false;
+        bool hasSecondFork = false;
 
         try
         {
-            hasLeftFork = leftFork.WaitOne(1000); //берет в левую
-            if (hasLeftFork)
+            hasFirstFork = firstFork.WaitOne(1000); 
+            if (hasFirstFork)
             {
-                hasRightFork = rightFork.WaitOne(1000); //берет в правую
-                if (hasRightFork)
+                hasSecondFork = secondFork.WaitOne(1000); 
+                if (hasSecondFork)
                 {
                     Console.WriteLine($"Философ {id} кушает");
-                    Thread.Sleep(new Random().Next(1000, 2000)); //кушает столько
+                    Thread.Sleep(new Random().Next(1000, 2000)); 
+                    return true;
                 }
             }
+            return false;
         }
         finally
         {
-            if (hasRightFork)
+            if (hasSecondFork)
             {
-                rightFork.ReleaseMutex();
+                secondFork.ReleaseMutex();
             }
-            if (hasLeftFork)
+            if (hasFirstFork)
             {
-                leftFork.ReleaseMutex();
+                firstFork.ReleaseMutex();
             }
         }
-
-        Console.WriteLine($"Философ {id} закончил кушать");
     }
 }

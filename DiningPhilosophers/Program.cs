@@ -1,8 +1,6 @@
-﻿using System;
-using System.Threading;
-using DiningPhilosophers;
+﻿using DiningPhilosophers;
 
-public static class Program
+class Program
 {
     static void Main(string[] args)
     {
